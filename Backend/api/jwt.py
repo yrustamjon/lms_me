@@ -2,6 +2,7 @@ from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
+from models.user import User
 SECRET_KEY="Rustamjon"
 ALGORITHM="HS256"
 secund=10
@@ -10,33 +11,60 @@ hour=0
 day=7
 
 def create_access_token(data: dict ):
-    expire = datetime.now(timezone.utc) + timedelta(seconds=1)
+    expire = datetime.now(timezone.utc) + timedelta(seconds=3)
     data.update({"exp":expire})
     return jwt.encode(data,SECRET_KEY,algorithm=ALGORITHM)
 
 def create_refresh_token(data: dict):
-    expire = datetime.now(timezone.utc) + timedelta(seconds=1)
+    expire = datetime.now(timezone.utc) + timedelta(seconds=7)
     data.update({"exp":expire})
     return jwt.encode(data,SECRET_KEY,algorithm=ALGORITHM)    
+
+from starlette.responses import JSONResponse
+
+PUBLIC_PATHS = [
+    "/docs",
+    "/redoc",
+    "/openapi.json",
+    "/api/auth/login/",
+    "/api/auth/refresh/"
+]
+
+
 
 class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
 
-        # public endpointlar
-        if request.url.path.startswith("/api/auth"):
+        if request.url.path in PUBLIC_PATHS:
             return await call_next(request)
 
-        auth = request.headers.get("Authorization")
 
-        if not auth:
-            raise HTTPException(status_code=401, detail="Token missing")
+        # CORS preflight request
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        auth_header = request.headers.get("Authorization")
+
+        if not auth_header:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Authorization token required"}
+            )
 
         try:
-            scheme, token = auth.split()
-            jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        except Exception:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            token = auth_header.split(" ")[1]
 
-        response = await call_next(request)
-        return response
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("user_id")
+
+            user = User.objects.get(id=user_id)
+            request.state.user = user
+
+        except JWTError:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid token"}
+            )
+
+        return await call_next(request)

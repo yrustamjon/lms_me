@@ -10,16 +10,39 @@ class UserCreate(BaseModel):
     email: str
     role: str
     password: str
-    
 
-class UserResponse(UserCreate):
+class UserMe(BaseModel):
     id: int
-    is_active: bool
-    create_at: datetime.datetime
-    updated_at: datetime.datetime
+    name: str
+    email: str
+    role: str
 
-    class Config:
-        from_attributes = True
+class UserMeUpdate(BaseModel):
+    name: str
+    email: str
+    role: str
+    password: str
+
+
+class UserOut(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+    hashed_password: str
+    is_active: bool
+    is_verified: bool
+    is_superuser: bool
+
+
 
 class RefreshSchema(BaseModel):
+    refresh_token: str
+
+class AccessSchema(BaseModel):
+    access_token: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
     refresh_token: str

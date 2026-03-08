@@ -1,8 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from .security import verify_token
 from fastapi.middleware.cors import CORSMiddleware
 from .schemas import *
 from models.user import User
 from .jwt import *
+
+from api.app.base import app as base_app
+from api.app.admin import app as admin_app
 
 
 app = FastAPI()
@@ -18,19 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/api/users")
-async def users():
-    user=User.objects.all()
-    print(user)
-    return {"users": list(user)}
 
-@app.post("/api/users")
-async def create_user(user:  UserCreate):
-    user=User.objects.create(name=user.name,email=user.email,hashed_password=user.password,role=user.role)
-    return {"user": user.name}
+app.add_middleware(AuthMiddleware)
 
 
-@app.post("/api/auth/login")
+@app.post("/api/auth/login/")
 async def login(user : UserLogin):
     print(user)
     u=User.objects.get(email=user.email)
@@ -56,39 +52,23 @@ async def login(user : UserLogin):
     }
 
 
-@app.post("/api/auth/refresh")
+from fastapi import HTTPException
+
+@app.post("/api/auth/refresh/")
 async def refresh(data: RefreshSchema):
     try:
-        from .jwt import SECRET_KEY, ALGORITHM
         payload = jwt.decode(data.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("user_id")
+
         if user_id is None:
-            return {"error": "Invalid token"}
-        
+            raise HTTPException(status_code=401, detail="Invalid token")
+
         new_access_token = create_access_token({"user_id": user_id})
+
         return {"access_token": new_access_token}
+
     except JWTError:
-        return {"error": "Invalid token"}
+        raise HTTPException(status_code=401, detail="Refresh token expired")
 
-
-@app.post("/api/admin/students/")
-async def admin_student_create():
-    return [
-  {
-    "id": 1,
-    "full_name": "Ali Valiyev",
-    "phone": "+998901234567",
-    "status": "active"
-  }
-]
-
-@app.get("/api/admin/students/")
-async def admin_student():
-    return [
-  {
-    "id": 1,
-    "full_name": "Ali Valiyev",
-    "phone": "+998901234567",
-    "status": "active"
-  }
-]
+app.include_router(base_app)
+app.include_router(admin_app)

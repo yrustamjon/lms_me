@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker
 from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 
-DATABASE_URL = 'postgres:rust1234@localhost:5432/lms'
+DATABASE_URL = 'postgres:1234@localhost:5432/lms'
 
 sync_engine = create_engine(
     f"postgresql+psycopg2://{DATABASE_URL}",
