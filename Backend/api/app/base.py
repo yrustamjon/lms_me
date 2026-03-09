@@ -16,10 +16,7 @@ async def users():
     print(user)
     return {"users": list(user)}
 
-# @app.post("/api/users")
-# async def create_user(user:  UserCreate):
-#     user=User.objects.create(name=user.name,email=user.email,hashed_password=user.password,role=user.role)
-#     return {"user": user.name}
+
 
 
 

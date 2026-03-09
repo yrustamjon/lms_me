@@ -46,3 +46,22 @@ class AccessSchema(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
+
+
+class StudentOut(BaseModel):
+    id: int
+    name: str
+    phone: str
+    email: str
+    is_active: bool
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+class GroupOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    teacher_id: int
+    students: list[StudentOut]
+    created_at: datetime.datetime
+    updated_at: datetime.datetime

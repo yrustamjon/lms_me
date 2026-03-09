@@ -25,6 +25,10 @@ app.add_middleware(
 
 app.add_middleware(AuthMiddleware)
 
+@app.post("/api/users")
+async def create_user(user:  UserCreate):
+    user=User.objects.create(name=user.name,email=user.email,hashed_password=user.password,role=user.role)
+    return {"user": user.name}
 
 @app.post("/api/auth/login/")
 async def login(user : UserLogin):
