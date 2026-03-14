@@ -1,7 +1,10 @@
 from pydantic import BaseModel
 import datetime
 
-
+class GroupCreate(BaseModel):
+    slug:str
+    name: str
+    description: str
 
 class UserLogin(BaseModel):
     email: str
@@ -10,7 +13,6 @@ class UserLogin(BaseModel):
 class UserCreate(BaseModel):
     name: str
     email: str
-    role: str
     password: str
 
 class UserMe(BaseModel):
@@ -31,6 +33,7 @@ class UserOut(BaseModel):
     name: str
     email: str
     role: str
+    groups:list[GroupCreate]  |None
     hashed_password: str
     is_active: bool
     is_verified: bool
@@ -50,11 +53,14 @@ class TokenResponse(BaseModel):
     refresh_token: str
 
 
+
+
 class StudentOut(BaseModel):
     id: int
     name: str
     phone: str
     email: str
+    groups:list[GroupCreate]
     is_active: bool
     created_at: datetime.datetime
     updated_at: datetime.datetime
@@ -64,9 +70,7 @@ class StudentCreate(BaseModel):
     name: str
     phone: str
     email: str
-    is_active: bool
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
+
 
 
 class GroupOut(BaseModel):
@@ -74,7 +78,7 @@ class GroupOut(BaseModel):
     slug: str |None
     name: str
     description: str
-    teacher_id: int
+    teacher_id: int | None
     students: list[StudentOut]
     created_at: datetime.datetime
     updated_at: datetime.datetime
@@ -83,12 +87,6 @@ class GroupOut(BaseModel):
     class Config:
         from_attributes = True
 
-class GroupCreate(BaseModel):
-    slug:str
-    name: str
-    description: str
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
 
 
 

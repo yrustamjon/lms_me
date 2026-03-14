@@ -17,7 +17,8 @@ class User(BaseModel):
     is_verified = Column(Boolean, default=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    groups = relationship("Group", back_populates="teacher")
 
 
 group_students = Table(
@@ -53,6 +54,7 @@ class Group(BaseModel):
     name = Column(String, index=True)
     description = Column(Text)
     teacher_id = Column(Integer, ForeignKey('users.id'))
+    teacher = relationship("User", back_populates="groups")
     students = relationship("Student", secondary=group_students, back_populates="groups", lazy='subquery')
 
 

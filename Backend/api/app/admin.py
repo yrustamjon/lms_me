@@ -26,7 +26,7 @@ async def create_teacher(user:  UserCreate,request: Request):
         return {"error": "Unauthorized"}
     
     try:
-        teacher=User.objects.create(name=user.name,email=user.email,hashed_password=user.password,role=user.role)
+        teacher=User.objects.create(name=user.name,email=user.email,hashed_password=user.password)
     except IntegrityError:
         raise HTTPException(
             status_code=400,
@@ -118,7 +118,7 @@ async def student_detail(student_id: int,request: Request):
     
     return student
 
-@app.put("/students/{student_id}/", response_model=StudentOut)
+@app.put("/students/{student_id}/", response_model=StudentCreate)
 async def update_student(student_id: int, student_data: StudentOut, request: Request):
     u=request.state.user
     if u.role!="admin":
@@ -168,7 +168,7 @@ async def create_group(group: GroupCreate,request: Request):
     if u.role!="admin":
         return {"error": "Unauthorized"}
     
-    group=Group.objects.create(slug=group.slug,name=group.name,description=group.description,teacher_id=group.teacher_id)
+    group=Group.objects.create(slug=group.slug,name=group.name,description=group.description)
     return group
 
 
@@ -250,5 +250,21 @@ async def delete_student_to_groups(group_id: int, student_id: int,request: Reque
     return group.students
 
 
+
+@app.patch("/groups/{group_id}/teachers/{teacher_id}/")
+async def add_student_to_group( group_id:int, teacher_id:int, request: Request):
+    u=request.state.user
+    if u.role!='admin':
+        return {"error": "Unauthorized"}
+    
+    group=Group.objects.get(id=group_id)
+    teacher=User.objects.get(id=teacher_id)
+
+    if not group or not teacher or teacher.role!='teacher':
+        return  {'error':'Group or teacher not found'}
+    
+    group.teacher_id=teacher.id
+    group.save()
+    return group
 
 
