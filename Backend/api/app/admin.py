@@ -7,7 +7,7 @@ from api.schemas import *
 from models.user import User
 from api.jwt import *
 
-app = APIRouter(tags=["Admin"],prefix="/api/admin")
+app = APIRouter(tags=["Admin"],prefix="/api/admin",dependencies=[Depends(verify_token)])
 
 @app.get("/teachers/", response_model=list[UserOut])
 async def teacher(request: Request):
@@ -96,8 +96,8 @@ async def student_(request: Request):
     return students
 
 
-@app.post("/students", response_model=StudentOut)
-async def create_student(student:  StudentOut,request: Request):
+@app.post("/students", response_model=StudentCreate)
+async def create_student(student:  StudentCreate,request: Request):
     u=request.state.user
     if u.role!="admin":
         return {"error": "Unauthorized"}
@@ -162,13 +162,93 @@ async def group_list(request: Request):
     groups=Group.objects.all()
     return groups
 
-@app.post("/groups/", response_model=GroupOut)
-async def create_group(group: GroupOut,request: Request):
+@app.post("/groups/", response_model=GroupCreate)
+async def create_group(group: GroupCreate,request: Request):
     u=request.state.user
     if u.role!="admin":
         return {"error": "Unauthorized"}
     
-    group=Group.objects.create(name=group.name,description=group.description,teacher_id=group.teacher_id)
+    group=Group.objects.create(slug=group.slug,name=group.name,description=group.description,teacher_id=group.teacher_id)
     return group
+
+
+@app.get("/groups/{group_id}/", response_model=GroupOut)
+async def group_detail(group_id: int,request: Request):
+    u=request.state.user
+    if u.role!="admin":
+        return {"error": "Unauthorized"}
+    
+    group=Group.objects.get(id=group_id)
+    if group is None:
+        return {"error": "Group not found"}
+    
+    return group
+
+@app.put("/groups/{group_id}/", response_model=GroupCreate)
+async def update_group(group_id: int, group_data: GroupCreate, request: Request):
+    u=request.state.user
+    if u.role!="admin":
+        return {"error": "Unauthorized"}
+
+    group = Group.objects.get(id=group_id)
+
+    if not group:
+        return {"error": "Group not found"}
+
+    update_data = group_data.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(group, key if key != 'created_at' else 'updated_at', value)
+
+    group.save()
+    return group
+
+
+@app.delete("/groups/{group_id}/")
+async def delete_group(group_id: int,request: Request):
+    u=request.state.user
+    if u.role!="admin":
+        return {"error": "Unauthorized"}
+    
+    group=Group.objects.get(id=group_id)
+    if group is None:
+        return {"error": "Group not found"}
+    
+    group.delete()
+    return {"message": "Group deleted successfully"}
+
+
+@app.post("/groups/{group_id}/students/{student_id}/")
+async def add_student_to_group(group_id: int, student_id: int, request: Request):
+    u=request.state.user
+    if u.role!="admin":
+        return {"error": "Unauthorized"}
+    
+    group = Group.objects.get(id=group_id)
+    student = Student.objects.get(id=student_id)
+
+    if not group or not student:
+        return {"error": "Group or Student not found"}
+
+    group.students.append(student)
+    group.save()
+
+    return {"message": "Student added to group successfully"}
+
+
+
+
+@app.delete("/groups/{group_id}/students/{student_id}/")
+async def delete_student_to_groups(group_id: int, student_id: int,request: Request):
+    u=request.state.user
+    if u.role!='admin':
+        return {"error": "Unauthorized"}
+
+    group=Group.objects.get(id=group_id)
+    group.students=[i for i in group.students if i.id!=student_id]
+    group.save()
+    return group.students
+
+
 
 

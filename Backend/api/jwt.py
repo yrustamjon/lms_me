@@ -28,7 +28,8 @@ PUBLIC_PATHS = [
     "/openapi.json",
     "/api/auth/login/",
     "/api/auth/refresh/",
-    "/api/users"
+    "/api/users",
+    "/news/"
 ]
 
 
@@ -47,27 +48,27 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         auth_header = request.headers.get("Authorization")
 
-        # if ! not auth_header:
-        #     return JSONResponse(
-        #         status_code=401,
-        #         content={"detail": "Authorization token required"}
-        #     )
+        if  not auth_header:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Authorization token required"}
+            )
 
-        # try:
-        #     token = auth_header.split(" ")[1]
+        try:
+            token = auth_header.split(" ")[1]
 
-        #     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        #     user_id = payload.get("user_id")
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("user_id")
 
-        #     user = User.objects.get(id=user_id)
-        #     request.state.user = user
+            user = User.objects.get(id=user_id)
+            request.state.user = user
 
-        # except JWTError:
-        #     return JSONResponse(
-        #         status_code=401,
-        #         content={"detail": "Invalid token"}
-        #     )
+        except JWTError:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid token"}
+            )
 
 
-        request.state.user =User.objects.get(role="admin")
+        # request.state.user =User.objects.get(role="admin")
         return await call_next(request)

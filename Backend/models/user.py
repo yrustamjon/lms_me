@@ -42,17 +42,18 @@ class Student(BaseModel):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    groups = relationship("Group", secondary=group_students, back_populates="students")
+    groups = relationship("Group", secondary=group_students, back_populates="students", lazy='subquery')
 
 
 class Group(BaseModel):
     __tablename__ = 'groups'
     
     id = Column(Integer, primary_key=True, index=True)
+    slug=Column(String, unique=True, index=True)
     name = Column(String, index=True)
     description = Column(Text)
     teacher_id = Column(Integer, ForeignKey('users.id'))
-    students = relationship("Student", secondary=group_students, back_populates="groups")
+    students = relationship("Student", secondary=group_students, back_populates="groups", lazy='subquery')
 
 
     created_at = Column(DateTime, default=datetime.utcnow)

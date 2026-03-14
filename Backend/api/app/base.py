@@ -10,15 +10,6 @@ app = APIRouter(dependencies=[Depends(verify_token)])
 
 
 
-@app.get("/api/users")
-async def users():
-    user=User.objects.all()
-    print(user)
-    return {"users": list(user)}
-
-
-
-
 
 
 @app.get("/api/auth/me/")

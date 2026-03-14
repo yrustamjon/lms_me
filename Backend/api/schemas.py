@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 import datetime
 
+
+
 class UserLogin(BaseModel):
     email: str
     password: str
@@ -57,11 +59,38 @@ class StudentOut(BaseModel):
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
+
+class StudentCreate(BaseModel):
+    name: str
+    phone: str
+    email: str
+    is_active: bool
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+
 class GroupOut(BaseModel):
     id: int
+    slug: str |None
     name: str
     description: str
     teacher_id: int
     students: list[StudentOut]
     created_at: datetime.datetime
     updated_at: datetime.datetime
+    
+    
+    class Config:
+        from_attributes = True
+
+class GroupCreate(BaseModel):
+    slug:str
+    name: str
+    description: str
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+
+
+
+
